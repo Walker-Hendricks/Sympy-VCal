@@ -1,5 +1,6 @@
 # Imports
 import sympy as sp
+from sympy import sin, diff
 from sympy.vector import CoordSys3D
 
 
@@ -28,7 +29,13 @@ def Cy_grad(fun):
    For a scalar function 𝑓, the gradient in cylindrical coordinates is given by:
     𝝯𝑓 = (∂𝑓/∂𝜌)𝐫 + [1/𝜌(∂𝑓/∂𝜃)]𝛉 + (∂𝑓/∂𝑧)𝐳
    '''
-   pass
+   rho_term = diff(fun, rho)
+   theta_term = 1/rho * diff(fun, theta)
+   z_term = diff(fun, z)
+
+   return rho_term * Cy.i + theta_term * Cy.j + z_term * Cy.k
+
+
 
 def Cy_div(vec):
    '''
@@ -37,7 +44,16 @@ def Cy_div(vec):
    For a vector <𝐫, 𝛉, 𝐳>, the divergence in cylindrical coordinates is given by:
    𝝯⦁𝑓 = (1/𝜌)(∂/∂𝜌[𝜌*𝐫]) + (1/𝜌)(∂𝛉/∂𝜃) + (∂𝐳/∂𝑧)
    '''
-   pass
+   i = vec.dot(Cy.i)
+   j = vec.dot(Cy.j)
+   k = vec.dot(Cy.k)
+
+   rho_term = 1/rho * diff(i * rho, rho)
+   theta_term = 1/rho * diff(j, theta)
+   z_term = diff(k, z)
+
+   return rho_term + theta_term + z_term
+
 
 
 def Cy_curl(vec):
@@ -47,7 +63,16 @@ def Cy_curl(vec):
    For a vector <𝐫, 𝛉, 𝐳>, the curl in cylindrical coordinates is given by:
    𝝯x𝑓 = (1/𝜌)[(∂𝐳/∂𝜃) - (∂𝛉/∂𝑧)]𝐫 + [(∂𝐫/∂𝑧) - (∂𝐳/∂𝜌)]𝛉 + (1/𝜌)[(∂/∂𝜌(𝜌𝛉)) - (∂𝐫/∂𝜃)]𝐳
    '''
-   pass
+   i = vec.dot(Cy.i)
+   j = vec.dot(Cy.j)
+   k = vec.dot(Cy.k)
+
+   rho_term = 1/rho * (diff(k, theta) - diff(j, z))
+   theta_term = diff(i, z) - diff(k, rho)
+   z_term = 1/rho * (diff(rho * j) - diff(i, theta))
+
+   return rho_term * Cy.i + theta_term * Cy.j + z_term * Cy.k
+
 
 
 def Cy_lapl(fun):
@@ -57,7 +82,11 @@ def Cy_lapl(fun):
    For a scalar function 𝑓, the Laplacian in cylindrical coordinates is given by:
    𝝯²𝑓 = (1/𝜌)(∂/∂𝜌[𝜌(∂𝑓/∂𝜌)]) + (1/𝜌²)(∂²𝑓/∂𝜃²) + (∂²𝑓/∂𝑧²)
    '''
-   pass
+   rho_term = 1/rho * diff(rho*diff(fun, rho), rho)
+   theta_term = 1/rho**2 * diff(diff(fun, theta), theta)
+   z_term = diff(diff(fun, z), z)
+
+   return rho_term + theta_term + z_term
 
 
 
@@ -69,9 +98,9 @@ def S_grad(fun):
     For a function 𝑓, the gradient in spherical coordinates is given by:
     𝝯𝑓 = (∂𝑓/∂𝑟)𝐫 + [1/𝑟(∂𝑓/∂𝜃)]𝛉 + [(1/𝑟sin(𝜃))(∂𝑓/∂𝜑)]𝛗
     '''
-    radial_term = sp.diff(fun, r)
-    theta_term = 1/r * sp.diff(fun, theta)
-    phi_term = 1/(r*sp.sin(theta)) * sp.diff(fun, phi)
+    radial_term = diff(fun, r)
+    theta_term = 1/r * diff(fun, theta)
+    phi_term = 1/(r*sin(theta)) * diff(fun, phi)
 
     return radial_term * S.i + theta_term * S.j + phi_term * S.k
 
@@ -87,9 +116,9 @@ def S_div(vec):
     j = vec.dot(S.j)
     k = vec.dot(S.k)
 
-    radial_term = 1/r**2 * sp.diff(r**2 * i, r)
-    theta_term = 1/(r*sp.sin(theta)) * sp.diff(sp.sin(theta)*j)
-    phi_term = 1/(r*sp.sin(theta)) * sp.diff(k, phi)
+    radial_term = 1/r**2 * diff(r**2 * i, r)
+    theta_term = 1/(r*sin(theta)) * diff(sin(theta)*j)
+    phi_term = 1/(r*sin(theta)) * diff(k, phi)
 
     return radial_term + theta_term + phi_term
 
@@ -105,9 +134,9 @@ def S_curl(vec):
     j = vec.dot(S.j)
     k = vec.dot(S.k)
 
-    radial_term = 1/(r*sp.sin(theta)) * (sp.diff(k * sp.sin(theta), theta) - sp.diff(j, phi))
-    theta_term = 1/r * (1/sp.sin(theta) * sp.diff(i, r) - sp.diff(r* k, r))
-    phi_term = 1/r * (sp.diff(r*j, r) - sp.diff(i, theta))
+    radial_term = 1/(r*sin(theta)) * (diff(k * sin(theta), theta) - diff(j, phi))
+    theta_term = 1/r * (1/sin(theta) * diff(i, r) - diff(r* k, r))
+    phi_term = 1/r * (diff(r*j, r) - diff(i, theta))
 
     return radial_term * S.i + theta_term * S.j + phi_term * S.k
     
@@ -119,11 +148,11 @@ def S_lapl(fun):
     For a scalar function 𝑓, the Laplacian in spherical coordinates is given by:
     𝝯²𝑓 = (1/𝑟²)(∂/∂𝑟[𝑟²(∂𝑓/∂𝑟)]) + (1/𝑟²sin(𝜃))(∂/∂𝜃[sin(𝜃)(∂𝑓/∂𝜃)]) + (1/𝑟²sin²(𝜃))(∂²𝑓/∂𝜑²)
     '''
-    diff = sp.diff(fun, r)
-    radial_term = (1/r**2) * sp.diff(r**2 * diff, r)
-    diff = sp.diff(fun, theta)
-    theta_term = 1/(r**2 * sp.sin(theta)) * sp.diff(sp.sin(theta) * diff, theta)
-    diff = sp.diff(fun, phi)
-    phi_term = 1/(r**2 * sp.sin(theta)**2) * sp.diff(diff, phi)
+    dif = diff(fun, r)
+    radial_term = (1/r**2) * diff(r**2 * dif, r)
+    dif = diff(fun, theta)
+    theta_term = 1/(r**2 * sin(theta)) * diff(sin(theta) * dif, theta)
+    dif = diff(fun, phi)
+    phi_term = 1/(r**2 * sin(theta)**2) * diff(dif, phi)
 
     return radial_term + theta_term + phi_term
